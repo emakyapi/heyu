@@ -1,0 +1,84 @@
+/* ============================================
+   KONSTRUKT — Base & Reset Styles
+   ============================================ */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-body);
+  background: var(--snow);
+  color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+input, textarea, select {
+  font-family: var(--font-body);
+}
+
+/* ============ Utility Classes ============ */
+.hidden   { display: none !important; }
+.sr-only  { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.flex     { display: flex; }
+.flex-col { flex-direction: column; }
+.items-center { align-items: center; }
+.justify-between { justify-content: space-between; }
+.gap-xs   { gap: var(--sp-xs); }
+.gap-sm   { gap: var(--sp-sm); }
+.gap-md   { gap: var(--sp-md); }
+.gap-lg   { gap: var(--sp-lg); }
+.w-full   { width: 100%; }
+.text-center { text-align: center; }
+
+/* ============ Scrollbar ============ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--fog); border-radius: var(--r-full); }
+
+/* ============ Animations ============ */
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,160,32,0.5); }
+  50%       { box-shadow: 0 0 0 10px rgba(232,160,32,0); }
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.3; }
+}
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(-12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOut {
+  from { opacity: 1; transform: translateX(0); }
+  to   { opacity: 0; transform: translateX(30px); }
+}
+@keyframes ping {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,160,32,0.5); }
+  50%       { box-shadow: 0 0 0 10px rgba(232,160,32,0); }
+}

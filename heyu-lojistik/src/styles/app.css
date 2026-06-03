@@ -1,0 +1,388 @@
+/* ============================================
+   HEYU — Ana Uygulama Stilleri
+   İnşaat Lojistik Platformu
+   ============================================ */
+
+/* ── APP SHELL ── */
+#app-root {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 20px 10px;
+  background: #0a1520;
+}
+.app {
+  width: 100%;
+  max-width: 400px;
+  background: var(--snow);
+  border-radius: 28px;
+  overflow: hidden;
+  min-height: 840px;
+  position: relative;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+}
+.screen {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  transition: opacity .3s ease, transform .3s ease;
+}
+.screen.hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(14px);
+}
+
+/* ── SPLASH ── */
+#s-splash {
+  background: var(--navy);
+  align-items: center;
+  justify-content: center;
+}
+.splash-bg {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, #0d1b2a 0%, #1b2d42 50%, #0d1b2a 100%);
+  overflow: hidden;
+}
+.splash-bg::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 30%, rgba(232,160,32,.08) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(42,157,92,.06) 0%, transparent 50%);
+}
+.splash-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+.splash-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 40px 30px;
+  width: 100%;
+}
+.heyu-icon {
+  width: 88px; height: 88px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 24px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 0 14px rgba(232,160,32,.1), 0 0 0 28px rgba(232,160,32,.05);
+  animation: logoPulse 3s ease-in-out infinite;
+}
+@keyframes logoPulse {
+  0%,100% { box-shadow: 0 0 0 14px rgba(232,160,32,.1), 0 0 0 28px rgba(232,160,32,.05); }
+  50%      { box-shadow: 0 0 0 18px rgba(232,160,32,.12), 0 0 0 36px rgba(232,160,32,.04); }
+}
+.heyu-icon i { font-size: 46px; color: var(--navy); }
+.heyu-name {
+  font-family: var(--font-display);
+  font-size: 52px; font-weight: 800;
+  color: #fff; letter-spacing: 6px; line-height: 1;
+}
+.heyu-sub1 { font-size: 11px; color: var(--steel3); letter-spacing: 3px; text-transform: uppercase; font-weight: 600; }
+.heyu-sub2 { font-size: 14px; color: var(--mist); margin-top: 10px; line-height: 1.7; max-width: 270px; text-align: center; }
+.splash-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.btn-splash-main {
+  width: 100%; background: var(--accent); color: var(--navy);
+  border: none; border-radius: 14px; padding: 16px;
+  font-size: 17px; font-weight: 800; font-family: var(--font-display);
+  letter-spacing: 1.5px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all .15s;
+}
+.btn-splash-main:hover { background: var(--accent2); transform: translateY(-1px); }
+.btn-splash-sec {
+  width: 100%; background: rgba(255,255,255,.07); color: var(--mist);
+  border: 1.5px solid rgba(255,255,255,.12); border-radius: 14px; padding: 14px;
+  font-size: 15px; font-weight: 600; font-family: var(--font-body); cursor: pointer; transition: all .15s;
+}
+.btn-splash-sec:hover { border-color: rgba(255,255,255,.25); }
+.splash-footer { font-size: 11px; color: var(--steel); text-align: center; margin-top: 6px; }
+
+/* ── BACK BTN ── */
+.back-btn {
+  position: absolute; top: 14px; left: 14px;
+  width: 36px; height: 36px;
+  background: rgba(255,255,255,.08); border: none;
+  border-radius: 10px; color: var(--mist);
+  font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; z-index: 10;
+}
+
+/* ── KULLANICI TİPİ ── */
+#s-usertype { background: var(--navy); }
+.ut-top { padding: 56px 22px 22px; text-align: center; }
+.ut-top-icon {
+  width: 48px; height: 48px;
+  background: rgba(232,160,32,.15);
+  border: 1.5px solid rgba(232,160,32,.3);
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 14px;
+}
+.ut-top-icon i { font-size: 24px; color: var(--accent2); }
+.ut-title { font-family: var(--font-display); font-size: 24px; font-weight: 700; color: #fff; letter-spacing: .5px; }
+.ut-sub { font-size: 13px; color: var(--steel3); margin-top: 5px; }
+.ut-list { padding: 0 18px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+.ut-card {
+  background: rgba(255,255,255,.05);
+  border: 1.5px solid rgba(255,255,255,.08);
+  border-radius: 14px; padding: 18px 16px;
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; gap: 14px;
+}
+.ut-card:hover {
+  background: rgba(232,160,32,.1);
+  border-color: rgba(232,160,32,.4);
+  transform: translateX(3px);
+}
+.ut-card-icon { width: 50px; height: 50px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.ut-card-body { flex: 1; }
+.ut-card-title { font-family: var(--font-display); font-size: 17px; font-weight: 700; color: #fff; letter-spacing: .5px; }
+.ut-card-sub { font-size: 12px; color: var(--steel3); margin-top: 3px; line-height: 1.45; }
+.ut-card-arrow { color: var(--steel2); font-size: 20px; transition: color .2s; }
+.ut-card:hover .ut-card-arrow { color: var(--accent2); }
+.ut-bottom { padding: 16px 18px 24px; text-align: center; font-size: 13px; color: var(--steel2); }
+.ut-bottom span { color: var(--accent2); font-weight: 600; cursor: pointer; }
+
+/* ── GİRİŞ ── */
+#s-login { background: var(--navy); }
+.login-top { padding: 56px 22px 20px; }
+.login-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(232,160,32,.12);
+  border: 1px solid rgba(232,160,32,.25);
+  border-radius: 7px; padding: 5px 12px;
+  font-size: 11px; font-weight: 700; color: var(--accent2);
+  letter-spacing: .8px; margin-bottom: 14px;
+}
+.login-title { font-family: var(--font-display); font-size: 30px; font-weight: 800; color: #fff; letter-spacing: .5px; }
+.login-sub { font-size: 13px; color: var(--steel3); margin-top: 5px; }
+.login-body { padding: 0 22px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.fgroup { display: flex; flex-direction: column; gap: 6px; }
+.flabel { font-size: 10px; font-weight: 700; color: var(--steel3); text-transform: uppercase; letter-spacing: 1px; }
+.finput-wrap { position: relative; }
+.finput {
+  width: 100%;
+  background: rgba(255,255,255,.06);
+  border: 1.5px solid rgba(255,255,255,.1);
+  border-radius: 11px; padding: 13px 42px 13px 14px;
+  font-size: 14px; font-weight: 500; color: #fff;
+  font-family: var(--font-body); outline: none;
+  transition: border-color .2s;
+}
+.finput::placeholder { color: var(--steel2); }
+.finput:focus { border-color: var(--accent); }
+.finput-icon { position: absolute; right: 13px; top: 50%; transform: translateY(-50%); color: var(--steel2); font-size: 18px; cursor: pointer; }
+.fforgot { text-align: right; font-size: 12px; color: var(--accent2); cursor: pointer; font-weight: 600; margin-top: -4px; }
+.btn-login {
+  width: 100%; background: var(--accent); color: var(--navy);
+  border: none; border-radius: 12px; padding: 15px;
+  font-size: 16px; font-weight: 800; font-family: var(--font-display);
+  letter-spacing: 1px; cursor: pointer; margin-top: 2px; transition: all .15s;
+}
+.btn-login:hover { background: var(--accent2); }
+.fdivider { display: flex; align-items: center; gap: 10px; }
+.fdivider::before, .fdivider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,.08); }
+.fdivider span { font-size: 11px; color: var(--steel2); }
+.btn-register {
+  width: 100%; background: transparent;
+  border: 1.5px solid rgba(255,255,255,.13); color: var(--mist);
+  border-radius: 12px; padding: 13px; font-size: 14px;
+  font-weight: 600; font-family: var(--font-body); cursor: pointer; transition: all .15s;
+}
+.btn-register:hover { border-color: rgba(255,255,255,.28); }
+.login-footer-txt { padding: 14px 22px 24px; text-align: center; font-size: 11px; color: var(--steel); line-height: 1.6; }
+.login-footer-txt span { color: var(--accent2); }
+
+/* ── ŞOFÖR — HARİTA ── */
+#s-sofor { background: #1a1a2e; position: relative; }
+#heyu-map { position: absolute; inset: 0; z-index: 1; }
+.map-ui {
+  position: absolute; inset: 0; z-index: 10;
+  pointer-events: none;
+  display: flex; flex-direction: column;
+}
+.map-top-bar {
+  pointer-events: all;
+  padding: 12px 14px;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.map-logo {
+  background: rgba(13,27,42,.9); backdrop-filter: blur(8px);
+  border-radius: 11px; padding: 7px 13px;
+  display: flex; align-items: center; gap: 7px;
+  border: 1px solid rgba(255,255,255,.08);
+}
+.map-logo-text { font-family: var(--font-display); font-size: 16px; font-weight: 800; color: #fff; letter-spacing: 2px; }
+.map-top-right { display: flex; gap: 8px; align-items: center; }
+.map-online-pill {
+  pointer-events: all;
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(13,27,42,.9); backdrop-filter: blur(8px);
+  border: 1.5px solid; border-radius: 20px; padding: 7px 13px;
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: var(--font-body); transition: all .2s;
+}
+.map-online-pill.on  { border-color: rgba(42,157,92,.6); color: #3ecf82; }
+.map-online-pill.off { border-color: rgba(100,100,100,.4); color: #888; }
+.map-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: blink 1.5s infinite; }
+.map-online-pill.off .map-dot { animation: none; }
+.map-notif-btn {
+  pointer-events: all;
+  width: 36px; height: 36px;
+  background: rgba(13,27,42,.9); backdrop-filter: blur(8px);
+  border-radius: 10px; border: 1px solid rgba(255,255,255,.08);
+  display: flex; align-items: center; justify-content: center; cursor: pointer; position: relative;
+}
+.map-notif-btn i { font-size: 18px; color: #fff; }
+.notif-badge { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--accent); border-radius: 50%; border: 2px solid var(--navy); }
+
+/* İş pinleri */
+.map-job-pin { pointer-events: all; position: absolute; z-index: 20; }
+.mjp-bubble {
+  background: var(--navy); border: 2px solid var(--accent);
+  border-radius: 10px; padding: 4px 10px;
+  font-size: 12px; font-weight: 700; color: var(--accent2);
+  font-family: var(--font-display); cursor: pointer; white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,.4); transition: transform .15s;
+}
+.mjp-bubble:hover { transform: scale(1.05); }
+.mjp-bubble.acil { background: #d64141; border-color: #ff6b6b; color: #fff; }
+
+/* Bottom sheet */
+.map-bottom { pointer-events: all; position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; }
+.driver-chip {
+  margin: 0 12px 8px;
+  background: rgba(13,27,42,.92); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,.1); border-radius: 14px;
+  padding: 10px 14px; display: flex; align-items: center; gap: 10px;
+}
+.dc-av {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--navy3); border: 2px solid var(--accent);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; color: #fff; flex-shrink: 0;
+}
+.dc-info { flex: 1; }
+.dc-name { font-size: 13px; font-weight: 600; color: #fff; }
+.dc-vehicle { font-size: 11px; color: var(--steel3); margin-top: 1px; }
+.dc-stats { display: flex; gap: 12px; }
+.dc-stat-v { font-size: 14px; font-weight: 700; color: var(--accent2); font-family: var(--font-display); }
+.dc-stat-l { font-size: 9px; color: var(--steel3); text-transform: uppercase; letter-spacing: .3px; }
+
+/* Job Sheet */
+.job-sheet {
+  background: var(--navy);
+  border-radius: 22px 22px 0 0;
+  border-top: 2px solid var(--accent);
+  padding: 0 16px 16px;
+  transform: translateY(0);
+  transition: transform .35s cubic-bezier(.25,.8,.25,1);
+}
+.job-sheet.closed { transform: translateY(100%); }
+.js-handle { width: 36px; height: 4px; background: rgba(255,255,255,.2); border-radius: 2px; margin: 12px auto 14px; }
+.js-badge { display: inline-flex; align-items: center; gap: 5px; border-radius: 6px; padding: 4px 10px; font-size: 10px; font-weight: 700; letter-spacing: .5px; margin-bottom: 10px; }
+.js-badge.acil { background: rgba(214,65,65,.2); border: 1px solid rgba(214,65,65,.4); color: #ff8080; }
+.js-badge.norm { background: rgba(232,160,32,.15); border: 1px solid rgba(232,160,32,.3); color: var(--accent2); }
+.js-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+.js-title { font-family: var(--font-display); font-size: 19px; font-weight: 700; color: #fff; }
+.js-price { font-family: var(--font-display); font-size: 26px; font-weight: 800; color: var(--accent2); line-height: 1; text-align: right; }
+.js-price small { font-size: 12px; font-weight: 400; color: var(--steel3); font-family: var(--font-body); }
+.js-route { display: flex; flex-direction: column; gap: 4px; margin-bottom: 10px; }
+.js-rp { display: flex; align-items: center; gap: 8px; font-size: 12px; color: rgba(255,255,255,.85); font-weight: 500; }
+.js-dot-g { width: 9px; height: 9px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.js-dot-r { width: 9px; height: 9px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+.js-rline { width: 9px; display: flex; justify-content: center; flex-shrink: 0; }
+.js-rline-i { width: 1px; height: 12px; background: rgba(255,255,255,.15); }
+.js-mid { font-size: 11px; color: var(--steel3); }
+.js-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.js-chip { display: flex; align-items: center; gap: 4px; background: rgba(255,255,255,.07); border-radius: 6px; padding: 4px 9px; font-size: 11px; color: var(--mist); }
+.js-chip i { font-size: 12px; }
+.js-actions { display: flex; gap: 8px; }
+.js-accept {
+  flex: 1; background: var(--accent); color: var(--navy); border: none;
+  border-radius: 11px; padding: 13px; font-size: 14px; font-weight: 800;
+  font-family: var(--font-display); letter-spacing: .5px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px; transition: all .15s;
+}
+.js-accept:hover { background: var(--accent2); }
+.js-reject {
+  width: 48px; background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12); border-radius: 11px;
+  color: var(--mist); font-size: 20px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all .15s;
+}
+.js-reject:hover { background: rgba(255,255,255,.12); }
+
+/* Şoför Nav */
+.sofor-nav {
+  background: var(--navy); border-top: 1.5px solid var(--navy3);
+  display: flex; padding: 8px 0 14px; flex-shrink: 0; pointer-events: all;
+}
+.snav-item {
+  flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px;
+  cursor: pointer; color: var(--steel2); font-size: 9px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .3px; transition: color .15s;
+}
+.snav-item.active { color: var(--accent2); }
+.snav-item i { font-size: 21px; }
+
+/* ── NAKLİYECİ ── */
+#s-nakliyeci { background: var(--snow); }
+.nak-hdr { background: var(--navy); padding: 48px 18px 18px; flex-shrink: 0; }
+.nak-hdr-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.nak-logo-wrap { display: flex; align-items: center; gap: 8px; }
+.nak-logo-box { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.nak-logo-box i { font-size: 17px; color: var(--navy); }
+.nak-logo-name { font-family: var(--font-display); font-size: 17px; font-weight: 800; color: #fff; letter-spacing: 2px; }
+.nak-bell { width: 34px; height: 34px; background: rgba(255,255,255,.08); border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; cursor: pointer; }
+.nak-bell i { font-size: 18px; color: var(--mist); }
+.nak-bell-dot { position: absolute; top: 7px; right: 7px; width: 7px; height: 7px; background: var(--accent); border-radius: 50%; border: 2px solid var(--navy2); }
+.nak-welcome { font-size: 12px; color: var(--steel3); margin-bottom: 2px; }
+.nak-company { font-family: var(--font-display); font-size: 22px; font-weight: 700; color: #fff; letter-spacing: .5px; }
+.nak-kpis { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 14px; }
+.nak-kpi { background: rgba(255,255,255,.07); border: .5px solid rgba(255,255,255,.08); border-radius: 10px; padding: 10px; text-align: center; }
+.nak-kpi-v { font-family: var(--font-display); font-size: 20px; font-weight: 700; color: #fff; }
+.nak-kpi-v.acc { color: var(--accent2); }
+.nak-kpi-l { font-size: 10px; color: var(--steel3); text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+.nak-body { flex: 1; overflow-y: auto; padding: 14px 14px 0; }
+.nak-sec-lbl { font-size: 10px; font-weight: 700; color: var(--steel); letter-spacing: 1.5px; text-transform: uppercase; margin: 12px 0 8px; display: flex; align-items: center; gap: 6px; }
+.nak-sec-lbl::after { content: ''; flex: 1; height: .5px; background: var(--fog); }
+.nak-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.nak-ac { background: #fff; border: .5px solid var(--fog); border-radius: 12px; padding: 14px; cursor: pointer; transition: all .15s; display: flex; flex-direction: column; gap: 6px; }
+.nak-ac:hover { border-color: var(--mist); box-shadow: 0 2px 8px rgba(13,27,42,.08); }
+.nak-ac-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.nak-ac-title { font-size: 13px; font-weight: 700; color: var(--navy); }
+.nak-ac-sub { font-size: 11px; color: var(--steel2); }
+.ship-card { background: #fff; border: .5px solid var(--fog); border-left: 3px solid var(--navy3); border-radius: 10px; padding: 12px; margin-bottom: 8px; cursor: pointer; transition: all .15s; }
+.ship-card:hover { border-color: var(--mist); }
+.ship-card.live { border-left-color: var(--accent); }
+.sc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.sc-id { font-size: 11px; font-weight: 700; color: var(--steel); letter-spacing: .5px; }
+.sc-status { font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 4px; }
+.sc-status.yolda { background: #fff3db; color: #b05e00; }
+.sc-status.bekle { background: #eff6ff; color: #2563eb; }
+.sc-status.done  { background: #f0fdf4; color: #166634; }
+.sc-route { display: flex; align-items: center; gap: 5px; font-size: 12px; margin-bottom: 6px; }
+.sc-dot-g { width: 8px; height: 8px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+.sc-dot-r { width: 8px; height: 8px; border-radius: 50%; background: var(--danger); flex-shrink: 0; }
+.sc-line { flex: 1; height: 1px; background: var(--fog); }
+.sc-meta { display: flex; gap: 10px; flex-wrap: wrap; }
+.sc-meta-item { font-size: 11px; color: var(--steel2); display: flex; align-items: center; gap: 3px; }
+.nak-nav { background: var(--navy); border-top: 1.5px solid var(--navy3); display: flex; padding: 8px 0 14px; flex-shrink: 0; }
+.nnav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; color: var(--steel2); font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; transition: color .15s; }
+.nnav-item.active { color: var(--accent2); }
+.nnav-item i { font-size: 21px; }

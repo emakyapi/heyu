@@ -1,0 +1,9 @@
+:root {
+  --navy:#0d1b2a; --navy2:#1b2d42; --navy3:#243b55; --navy4:#2e4d6e;
+  --steel:#4a6282; --steel2:#6b82a0; --steel3:#8fa3bc;
+  --mist:#b8c8d8; --fog:#dce6ef; --snow:#f0f4f8;
+  --accent:#e8a020; --accent2:#f5b835;
+  --danger:#d64141; --success:#2a9d5c;
+  --font-body:'Barlow',sans-serif;
+  --font-display:'Barlow Condensed',sans-serif;
+}
