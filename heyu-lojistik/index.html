@@ -19,17 +19,17 @@
   --red:#e53e3e;--green:#2d9e6b;
   --fn:'Inter',sans-serif;--fd:'Space Grotesk',sans-serif;
 }
-html,body{height:100%;font-family:var(--fn);background:#dde5f0;display:flex;justify-content:center;align-items:flex-start;padding:20px 10px;min-height:100vh}
+html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;display:flex;justify-content:center;align-items:stretch;padding:0;margin:0;overflow:hidden}
 
 /* ── WRAP ── */
-.W{width:100%;max-width:390px;height:844px;background:var(--bg2);border-radius:32px;overflow:hidden;position:relative;box-shadow:0 0 0 1px var(--line),0 8px 40px rgba(26,58,107,.15);display:flex;flex-direction:column}
+.W{width:100%;max-width:390px;height:100vh;background:var(--bg2);border-radius:0;overflow:hidden;position:relative;box-shadow:none;display:flex;flex-direction:column}
 
 /* ── SCREEN ── */
-.S{position:absolute;inset:0;display:flex;flex-direction:column;transition:opacity .25s,transform .25s;background:var(--bg2)}
+.S{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;flex-direction:column;transition:opacity .25s,transform .25s;background:var(--bg2);overflow:hidden}
 .S.H{opacity:0;pointer-events:none;transform:translateY(8px)}
 
 /* ── BOTTOM NAV ── */
-.BN{background:#fff;border-top:1.5px solid var(--line);display:flex;padding:10px 0 16px;flex-shrink:0;box-shadow:0 -2px 10px rgba(26,58,107,.07);z-index:100}
+.BN{background:#fff;border-top:1.5px solid var(--line);display:flex;padding:10px 0 16px;box-shadow:0 -2px 10px rgba(26,58,107,.07);z-index:100;flex-shrink:0}
 .BN a{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;color:var(--txt3);font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;text-decoration:none;transition:color .15s;-webkit-tap-highlight-color:transparent}
 .BN a i{font-size:24px}
 .BN a.on{color:var(--or)}
@@ -88,7 +88,7 @@ html,body{height:100%;font-family:var(--fn);background:#dde5f0;display:flex;just
 .lg-foot span{color:var(--or)}
 
 /* ── ŞOFÖR HARİTA ── */
-#sf{background:var(--bg)}
+#sf{background:var(--bg);display:flex;flex-direction:column}
 .map-topbar{position:absolute;top:0;left:0;right:0;z-index:50;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none}
 .map-topbar>*{pointer-events:all}
 .map-pill{background:rgba(255,255,255,.95);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:7px;box-shadow:0 2px 10px rgba(26,58,107,.1)}
@@ -100,10 +100,10 @@ html,body{height:100%;font-family:var(--fn);background:#dde5f0;display:flex;just
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
 /* MAP DIV — sabit yükseklik, kesin çalışır */
-#heyu-map{width:100%;height:480px;flex-shrink:0;display:block;z-index:1}
-#nak-map{width:100%;height:480px;flex-shrink:0;display:block;z-index:1}
+#heyu-map{width:100%;height:calc(100vh - 140px);display:block;z-index:1;flex-shrink:0}
+#nak-map{width:100%;position:absolute;top:0;left:0;right:0;bottom:0;z-index:1}
 
-.sf-chip{background:#fff;border:1px solid var(--line);border-radius:14px;margin:8px 12px 0;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:0 1px 8px rgba(26,58,107,.07)}
+.sf-chip{background:#fff;border:1px solid var(--line);border-radius:14px;margin:0 12px;padding:10px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;box-shadow:0 1px 8px rgba(26,58,107,.07);z-index:20}
 .sf-av{width:36px;height:36px;border-radius:50%;background:rgba(244,121,32,.1);border:2px solid var(--or);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--or);flex-shrink:0}
 .sf-nm{font-size:13px;font-weight:600;color:var(--navy)}
 .sf-vh{font-size:11px;color:var(--txt3);margin-top:1px}
@@ -111,8 +111,8 @@ html,body{height:100%;font-family:var(--fn);background:#dde5f0;display:flex;just
 .sf-sl{font-size:9px;color:var(--txt3);text-transform:uppercase;letter-spacing:.3px}
 
 /* JOB SHEET */
-.js{position:absolute;left:0;right:0;bottom:70px;background:#fff;border-radius:20px 20px 0 0;border-top:2.5px solid var(--or);padding:0 16px 14px;z-index:40;transition:transform .3s cubic-bezier(.25,.8,.25,1)}
-.js.closed{transform:translateY(120%)}
+.js{position:absolute;left:0;right:0;bottom:130px;background:#fff;border-radius:20px 20px 0 0;border-top:2.5px solid var(--or);padding:0 16px 14px;z-index:40;transition:transform .3s cubic-bezier(.25,.8,.25,1)}
+.js.closed{transform:translateY(300%)}
 .js-pull{width:32px;height:3px;background:var(--line);border-radius:2px;margin:10px auto 14px}
 .jsbadge{display:inline-flex;align-items:center;gap:5px;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;letter-spacing:.5px;margin-bottom:10px}
 .jsbadge.acil{background:rgba(229,62,62,.08);border:1px solid rgba(229,62,62,.2);color:var(--red)}
@@ -279,7 +279,7 @@ html,body{height:100%;font-family:var(--fn);background:#dde5f0;display:flex;just
 .pb-bar{background:var(--bg3);border-radius:3px;height:6px;overflow:hidden}
 .pbf{height:100%;border-radius:3px}
 /* map topbar için nakliyeci */
-.nk-map-top{padding:12px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;background:#fff;border-bottom:1.5px solid var(--line);box-shadow:0 1px 8px rgba(26,58,107,.06)}
+.nk-map-top{padding:12px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;background:#fff;border-bottom:1.5px solid var(--line);box-shadow:0 1px 8px rgba(26,58,107,.06);z-index:10}
 </style>
 </head>
 <body>
@@ -590,7 +590,7 @@ function nkNav(tab){
 function initMap(){
   var el=document.getElementById('heyu-map');
   if(!el) return;
-  if(map){map.invalidateSize();return;}
+  if(map){setTimeout(function(){map.invalidateSize();},100);return;}
   map=L.map('heyu-map',{center:[39.2,34.0],zoom:6,zoomControl:true,attributionControl:false});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
   var di=L.divIcon({className:'',html:'<div style="width:36px;height:36px;background:#1a3a6b;border:2.5px solid #f47920;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 0 0 8px rgba(244,121,32,.15)">🚛</div>',iconSize:[36,36],iconAnchor:[18,18]});
