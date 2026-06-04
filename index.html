@@ -6,7 +6,7 @@
 <title>HEYU — İnşaat Lojistik</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css"/>
-<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYPhIPqUtwUErFPsoLbyp9chkkRS_sA7w&language=tr&region=TR"></script>
+<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBYPhIPqUtwUErFPsoLbyp9chkkRS_sA7w&language=tr&region=TR" async defer onerror="console.warn('Maps API yuklenmedi')"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -575,11 +575,20 @@ var JOBS=[
 var SBTNS=['Yüklemeyi Tamamladım','Teslim Noktasına Vardım','Teslimi Tamamla'];
 
 function go(id){
-  document.querySelectorAll('.S').forEach(function(s){s.classList.add('H');});
-  document.getElementById(id).classList.remove('H');
-  if(id==='sf') setTimeout(initMap,200);
-  if(id==='nk-m') setTimeout(initNakMap,200);
-  if(id==='nk-arac') setTimeout(loadAracListesi,100);
+  try {
+    document.querySelectorAll('.S').forEach(function(s){
+      s.classList.add('H');
+      s.style.zIndex='0';
+    });
+    var target=document.getElementById(id);
+    if(target){
+      target.classList.remove('H');
+      target.style.zIndex='10';
+    }
+    if(id==='sf') setTimeout(initMap,200);
+    if(id==='nk-m') setTimeout(initNakMap,200);
+    if(id==='nk-arac') setTimeout(loadAracListesi,100);
+  } catch(e){ console.error('go() error:',e); }
 }
 
 function sel(t){
@@ -922,6 +931,23 @@ function loadAracListesi() {
 
 // Araç Bul ekranı açılınca otomatik yükle
 var origNkNav = nkNav;
+
+// Butонları DOMContentLoaded'da manuel bağla (güvenli başlatma)
+document.addEventListener('DOMContentLoaded', function(){
+  // Başla butonu
+  var sp = document.getElementById('sp');
+  if(sp){
+    var btns = sp.querySelectorAll('button');
+    btns.forEach(function(btn){
+      btn.addEventListener('click', function(){
+        go('ut');
+      });
+    });
+  }
+  // Splash screen en üstte olsun
+  var spEl = document.getElementById('sp');
+  if(spEl) spEl.style.zIndex = '10';
+});
 
 </script>
 </body>
