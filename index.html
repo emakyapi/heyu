@@ -45,6 +45,7 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
 .btn-out{width:100%;background:transparent;color:var(--txt2);border:1.5px solid var(--line2);border-radius:14px;padding:14px;font-size:14px;font-weight:500;font-family:var(--fn);cursor:pointer;transition:all .15s}
 .btn-out:hover{border-color:var(--txt3)}
 .sp-ver{font-size:11px;color:var(--txt3);text-align:center}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 /* ── KULLANICI TİPİ ── */
 #ut{background:var(--bg)}
@@ -655,7 +656,7 @@ function initMap(){
   google.maps.event.trigger(map,'resize');
   map.setCenter({lat:39.2,lng:34.0});
   // Arvento araçlarını yükle
-  setTimeout(function(){loadVehiclesOnMap(map);},500);
+  setTimeout(function(){loadVehiclesOnMap(map);startVehicleRefresh(map);},500);
 }
 function initNakMap(){
   var el=document.getElementById('nak-map');
@@ -723,17 +724,15 @@ function nextStep(){
   if(stepN===4){document.getElementById('step-btn').textContent='Tamamlandı ✓';setTimeout(function(){alert('Sefer tamamlandı! ₺12.750 hesabınıza aktarılıyor.');sfNav('k');},400);}
 }
 
-// ══ ARVENTO API ALTYAPISI ══
-// API gelince bu config güncellenecek
-var ARVENTO_CONFIG = {
-  apiUrl: 'http://ws.arvento.com/v1/report.asmx',
-  username: 'emakyapi',
-  pin1: 'Ea240685*',
-  pin2: 'Ea240685*',
-  enabled: true
-};
 
-// Mock araç verileri (Arvento API gelince bu kaldırılacak)
+
+
+
+// ══ ARVENTO API ALTYAPISI ══
+// Proxy URL - e-nak.com.tr sunucusundaki PHP proxy dosyası
+var ARVENTO_PROXY = '/arvento-proxy.php';
+
+// Mock araç verileri - Proxy bağlanamazsa yedek olarak kullanılır
 var MOCK_VEHICLES = [
   {id:'ARV001', plaka:'34 KNT 881', sofor:'Mehmet Karataş', arac:'MAN TGX 18.460', tip:'TIR', kapasite:24, lat:41.01, lng:28.97, hiz:0, durum:'musait', puan:4.8, mesafe:2.3},
   {id:'ARV002', plaka:'06 AHK 441', sofor:'Ahmet Kaya', arac:'Volvo FH 460', tip:'TIR', kapasite:22, lat:39.93, lng:32.86, hiz:85, durum:'seferde', puan:4.9, mesafe:8.1},
@@ -743,76 +742,89 @@ var MOCK_VEHICLES = [
   {id:'ARV006', plaka:'42 KML 553', sofor:'Kemal Arslan', arac:'Kamyon 18t', tip:'Kamyon', kapasite:18, lat:39.75, lng:30.52, hiz:0, durum:'musait', puan:4.5, mesafe:31.0}
 ];
 
-// Arvento API fonksiyonları (API gelince implement edilecek)
+// Araç verisi kaynağı durumu
+var arventoStatus = {live: false, lastFetch: null, error: null};
+
+// Arvento API fonksiyonları - Proxy üzerinden gerçek veri
 var ArventoAPI = {
-  // Tüm araçları getir
+  // Tüm araçları getir (proxy üzerinden)
   getVehicles: async function() {
-    if (ARVENTO_CONFIG.enabled) {
-      try {
-        // Arvento SOAP API - CORS nedeniyle proxy gerekebilir
-        var url = ARVENTO_CONFIG.apiUrl + '/GetVehicleLastLocations' +
-          '?username=' + encodeURIComponent(ARVENTO_CONFIG.username) +
-          '&pin1=' + encodeURIComponent(ARVENTO_CONFIG.pin1) +
-          '&pin2=' + encodeURIComponent(ARVENTO_CONFIG.pin2);
-        
-        var resp = await fetch(url, {
-          method: 'GET',
-          headers: {'Content-Type': 'application/json'}
-        });
-        
-        if (resp.ok) {
-          var data = await resp.json();
-          // Arvento response'u HEYU formatına çevir
-          if (Array.isArray(data) && data.length > 0) {
-            return data.map(function(v, i) {
-              return {
-                id: v.VehicleId || v.DeviceId || ('ARV' + i),
-                plaka: v.Plate || v.LicensePlate || v.VehicleName || 'Plaka-' + i,
-                sofor: v.DriverName || v.Driver || 'Sürücü ' + (i+1),
-                arac: v.VehicleModel || v.Model || 'Araç',
-                tip: (v.VehicleType || '').toLowerCase().includes('kamyon') ? 'Kamyon' : 'TIR',
-                kapasite: v.Capacity || 20,
-                lat: parseFloat(v.Latitude || v.Lat || 39.0),
-                lng: parseFloat(v.Longitude || v.Lon || v.Lng || 35.0),
-                hiz: parseFloat(v.Speed || v.Hiz || 0),
-                durum: (v.Speed > 5 || v.Hiz > 5) ? 'seferde' : 'musait',
-                puan: 4.7,
-                mesafe: 0
-              };
-            });
-          }
-        }
-        console.log('Arvento API yanıt verdi ama veri yok, mock data kullanılıyor');
-        return MOCK_VEHICLES;
-      } catch(e) {
-        console.log('Arvento API hatası (CORS olabilir), mock data kullanılıyor:', e.message);
-        return MOCK_VEHICLES;
+    try {
+      var resp = await fetch(ARVENTO_PROXY + '?action=vehicles', {
+        method: 'GET',
+        headers: {'Accept': 'application/json'},
+        signal: AbortSignal.timeout ? AbortSignal.timeout(8000) : undefined
+      });
+
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+      var result = await resp.json();
+
+      if (result.ok && Array.isArray(result.vehicles) && result.vehicles.length > 0) {
+        arventoStatus.live = true;
+        arventoStatus.lastFetch = new Date();
+        arventoStatus.error = null;
+        showArventoStatus(true, result.count);
+        return result.vehicles;
       }
+
+      if (result.error) {
+        arventoStatus.error = result.error;
+        if (result.hint) console.warn('Arvento:', result.hint);
+      }
+    } catch(e) {
+      arventoStatus.error = e.message;
+      console.log('Arvento proxy hatası:', e.message);
     }
+
+    arventoStatus.live = false;
+    showArventoStatus(false, MOCK_VEHICLES.length);
     return MOCK_VEHICLES;
   },
 
   // Belirli aracın konumunu getir
   getVehicleLocation: async function(vehicleId) {
-    if (ARVENTO_CONFIG.enabled) {
-      try {
-        var url = ARVENTO_CONFIG.apiUrl + '/GetVehicleLocation' +
-          '?username=' + encodeURIComponent(ARVENTO_CONFIG.username) +
-          '&pin1=' + encodeURIComponent(ARVENTO_CONFIG.pin1) +
-          '&pin2=' + encodeURIComponent(ARVENTO_CONFIG.pin2) +
-          '&vehicleId=' + vehicleId;
-        var resp = await fetch(url);
-        if (resp.ok) return await resp.json();
-      } catch(e) {
-        console.log('Arvento konum hatası:', e.message);
+    try {
+      var resp = await fetch(ARVENTO_PROXY + '?action=location&id=' + encodeURIComponent(vehicleId));
+      if (resp.ok) {
+        var data = await resp.json();
+        if (data && !data.error) return data;
       }
-    }
+    } catch(e) {}
     return MOCK_VEHICLES.find(function(v){return v.id===vehicleId;});
   }
 };
 
+// Haritada canlı/mock durum göstergesi
+function showArventoStatus(isLive, count) {
+  var existing = document.getElementById('arvento-status');
+  if (existing) existing.remove();
+  var bar = document.createElement('div');
+  bar.id = 'arvento-status';
+  bar.style.cssText = 'position:absolute;top:10px;right:10px;z-index:100;background:' +
+    (isLive ? 'rgba(45,158,107,.9)' : 'rgba(244,121,32,.85)') +
+    ';color:#fff;font-size:11px;font-weight:700;padding:5px 10px;border-radius:8px;' +
+    'backdrop-filter:blur(4px);display:flex;align-items:center;gap:5px;';
+  bar.innerHTML = (isLive
+    ? '<span style="width:7px;height:7px;background:#fff;border-radius:50%;animation:pulse 1s infinite"></span>CANLI · ' + count + ' Araç'
+    : '⚠ Demo · ' + count + ' Araç (Proxy Gerekli)');
+  // Harita containerına ekle
+  var mapEl = document.getElementById('sf') || document.getElementById('nk-m');
+  if (mapEl) mapEl.appendChild(bar);
+}
+
 // Araç markerlarını haritada göster
 var vehicleMarkers = [];
+var vehicleRefreshTimer = null;
+
+function startVehicleRefresh(mapObj) {
+  // 30 saniyede bir araç konumlarını güncelle
+  if (vehicleRefreshTimer) clearInterval(vehicleRefreshTimer);
+  vehicleRefreshTimer = setInterval(function(){
+    loadVehiclesOnMap(mapObj);
+  }, 30000);
+}
+
 function loadVehiclesOnMap(mapObj) {
   ArventoAPI.getVehicles().then(function(vehicles) {
     // Eski markerları temizle
