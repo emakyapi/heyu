@@ -717,11 +717,11 @@ function nextStep(){
 // ══ ARVENTO API ALTYAPISI ══
 // API gelince bu config güncellenecek
 var ARVENTO_CONFIG = {
-  apiUrl: 'https://api.arvento.com/v1', // Arvento API URL (gelince eklenecek)
-  apiKey: null, // API key (gelince eklenecek)
-  username: null, // Kullanıcı adı (gelince eklenecek)
-  password: null, // Şifre (gelince eklenecek)
-  enabled: false // API key gelince true yapılacak
+  apiUrl: 'http://ws.arvento.com/v1/report.asmx',
+  username: 'emakyapi',
+  pin1: 'Ea240685*',
+  pin2: 'Ea240685*',
+  enabled: true
 };
 
 // Mock araç verileri (Arvento API gelince bu kaldırılacak)
@@ -738,34 +738,64 @@ var MOCK_VEHICLES = [
 var ArventoAPI = {
   // Tüm araçları getir
   getVehicles: async function() {
-    if (ARVENTO_CONFIG.enabled && ARVENTO_CONFIG.apiKey) {
+    if (ARVENTO_CONFIG.enabled) {
       try {
-        var resp = await fetch(ARVENTO_CONFIG.apiUrl + '/vehicles', {
-          headers: {
-            'Authorization': 'Bearer ' + ARVENTO_CONFIG.apiKey,
-            'Content-Type': 'application/json'
-          }
+        // Arvento SOAP API - CORS nedeniyle proxy gerekebilir
+        var url = ARVENTO_CONFIG.apiUrl + '/GetVehicleLastLocations' +
+          '?username=' + encodeURIComponent(ARVENTO_CONFIG.username) +
+          '&pin1=' + encodeURIComponent(ARVENTO_CONFIG.pin1) +
+          '&pin2=' + encodeURIComponent(ARVENTO_CONFIG.pin2);
+        
+        var resp = await fetch(url, {
+          method: 'GET',
+          headers: {'Content-Type': 'application/json'}
         });
-        var data = await resp.json();
-        return data.vehicles || data;
+        
+        if (resp.ok) {
+          var data = await resp.json();
+          // Arvento response'u HEYU formatına çevir
+          if (Array.isArray(data) && data.length > 0) {
+            return data.map(function(v, i) {
+              return {
+                id: v.VehicleId || v.DeviceId || ('ARV' + i),
+                plaka: v.Plate || v.LicensePlate || v.VehicleName || 'Plaka-' + i,
+                sofor: v.DriverName || v.Driver || 'Sürücü ' + (i+1),
+                arac: v.VehicleModel || v.Model || 'Araç',
+                tip: (v.VehicleType || '').toLowerCase().includes('kamyon') ? 'Kamyon' : 'TIR',
+                kapasite: v.Capacity || 20,
+                lat: parseFloat(v.Latitude || v.Lat || 39.0),
+                lng: parseFloat(v.Longitude || v.Lon || v.Lng || 35.0),
+                hiz: parseFloat(v.Speed || v.Hiz || 0),
+                durum: (v.Speed > 5 || v.Hiz > 5) ? 'seferde' : 'musait',
+                puan: 4.7,
+                mesafe: 0
+              };
+            });
+          }
+        }
+        console.log('Arvento API yanıt verdi ama veri yok, mock data kullanılıyor');
+        return MOCK_VEHICLES;
       } catch(e) {
-        console.log('Arvento API hatası, mock data kullanılıyor:', e);
+        console.log('Arvento API hatası (CORS olabilir), mock data kullanılıyor:', e.message);
         return MOCK_VEHICLES;
       }
     }
-    return MOCK_VEHICLES; // API yoksa mock data
+    return MOCK_VEHICLES;
   },
 
   // Belirli aracın konumunu getir
   getVehicleLocation: async function(vehicleId) {
-    if (ARVENTO_CONFIG.enabled && ARVENTO_CONFIG.apiKey) {
+    if (ARVENTO_CONFIG.enabled) {
       try {
-        var resp = await fetch(ARVENTO_CONFIG.apiUrl + '/vehicles/' + vehicleId + '/location', {
-          headers: {'Authorization': 'Bearer ' + ARVENTO_CONFIG.apiKey}
-        });
-        return await resp.json();
+        var url = ARVENTO_CONFIG.apiUrl + '/GetVehicleLocation' +
+          '?username=' + encodeURIComponent(ARVENTO_CONFIG.username) +
+          '&pin1=' + encodeURIComponent(ARVENTO_CONFIG.pin1) +
+          '&pin2=' + encodeURIComponent(ARVENTO_CONFIG.pin2) +
+          '&vehicleId=' + vehicleId;
+        var resp = await fetch(url);
+        if (resp.ok) return await resp.json();
       } catch(e) {
-        return MOCK_VEHICLES.find(v => v.id === vehicleId);
+        console.log('Arvento konum hatası:', e.message);
       }
     }
     return MOCK_VEHICLES.find(function(v){return v.id===vehicleId;});
