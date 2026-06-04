@@ -279,6 +279,7 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
 .pbf{height:100%;border-radius:3px}
 /* map topbar için nakliyeci */
 .nk-map-top{padding:12px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;background:#fff;border-bottom:1.5px solid var(--line);box-shadow:0 1px 8px rgba(26,58,107,.06);z-index:10}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
@@ -523,10 +524,15 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
     <div class="frow"><div class="fp on">Tümü (4)</div><div class="fp">TIR</div><div class="fp">Kamyon</div><div class="fp">Müsait</div></div>
   </div>
   <div class="scroll">
-    <div class="slbl">Yakın Araçlar</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin:12px 0 8px">
+      <div class="slbl" style="margin:0">Yakın Araçlar</div>
+      <div style="font-size:11px;color:var(--or);font-weight:600;cursor:pointer" onclick="loadAracListesi()">↺ Yenile</div>
+    </div>
+    <div id="arac-listesi">
     <div class="araç-card" onclick="alert('Ahmet Kaya ile iletişime geçildi.')"><div class="araç-av">🚛</div><div style="flex:1"><div class="araç-nm">Ahmet Kaya · MAN TGX 18.460</div><div class="araç-sub">34 AHK 441 · 24 ton · 2.3 km uzakta</div><div style="display:flex;gap:5px;margin-top:5px"><span class="araç-badge">Müsait</span><span class="jchip">4.9★</span><span class="jchip">TIR</span></div></div><i class="ti ti-chevron-right" style="color:var(--txt3)"></i></div>
     <div class="araç-card" onclick="alert('Murat Demir ile iletişime geçildi.')"><div class="araç-av">🚚</div><div style="flex:1"><div class="araç-nm">Murat Demir · Ford Cargo 1842</div><div class="araç-sub">06 MRD 337 · 18 ton · 4.1 km uzakta</div><div style="display:flex;gap:5px;margin-top:5px"><span class="araç-badge">Müsait</span><span class="jchip">4.7★</span><span class="jchip">Kamyon</span></div></div><i class="ti ti-chevron-right" style="color:var(--txt3)"></i></div>
     <div class="araç-card" onclick="alert('Serkan Yıldız ile iletişime geçildi.')"><div class="araç-av">🚛</div><div style="flex:1"><div class="araç-nm">Serkan Yıldız · Volvo FH 460</div><div class="araç-sub">35 SRK 882 · 22 ton · 6.7 km uzakta</div><div style="display:flex;gap:5px;margin-top:5px"><span class="araç-badge">Müsait</span><span class="jchip">4.8★</span><span class="jchip">TIR</span></div></div><i class="ti ti-chevron-right" style="color:var(--txt3)"></i></div>
+    </div><!-- /arac-listesi -->
     <div style="height:14px"></div>
   </div>
 </div>
@@ -573,6 +579,7 @@ function go(id){
   document.getElementById(id).classList.remove('H');
   if(id==='sf') setTimeout(initMap,200);
   if(id==='nk-m') setTimeout(initNakMap,200);
+  if(id==='nk-arac') setTimeout(loadAracListesi,100);
 }
 
 function sel(t){
@@ -638,6 +645,8 @@ function initMap(){
   });
   google.maps.event.trigger(map,'resize');
   map.setCenter({lat:39.2,lng:34.0});
+  // Arvento araçlarını yükle
+  setTimeout(function(){loadVehiclesOnMap(map);},500);
 }
 function initNakMap(){
   var el=document.getElementById('nak-map');
@@ -668,6 +677,8 @@ function initNakMap(){
   });
   google.maps.event.trigger(nakMap,'resize');
   nakMap.setCenter({lat:39.5,lng:34.0});
+  // Arvento araçlarını yükle
+  setTimeout(function(){loadVehiclesOnMap(nakMap);},500);
 }
 
 function openJob(i){
@@ -702,6 +713,186 @@ function nextStep(){
   if(stepN<4) document.getElementById('step-btn').textContent=SBTNS[stepN-1];
   if(stepN===4){document.getElementById('step-btn').textContent='Tamamlandı ✓';setTimeout(function(){alert('Sefer tamamlandı! ₺12.750 hesabınıza aktarılıyor.');sfNav('k');},400);}
 }
+
+// ══ ARVENTO API ALTYAPISI ══
+// API gelince bu config güncellenecek
+var ARVENTO_CONFIG = {
+  apiUrl: 'https://api.arvento.com/v1', // Arvento API URL (gelince eklenecek)
+  apiKey: null, // API key (gelince eklenecek)
+  username: null, // Kullanıcı adı (gelince eklenecek)
+  password: null, // Şifre (gelince eklenecek)
+  enabled: false // API key gelince true yapılacak
+};
+
+// Mock araç verileri (Arvento API gelince bu kaldırılacak)
+var MOCK_VEHICLES = [
+  {id:'ARV001', plaka:'34 KNT 881', sofor:'Mehmet Karataş', arac:'MAN TGX 18.460', tip:'TIR', kapasite:24, lat:41.01, lng:28.97, hiz:0, durum:'musait', puan:4.8, mesafe:2.3},
+  {id:'ARV002', plaka:'06 AHK 441', sofor:'Ahmet Kaya', arac:'Volvo FH 460', tip:'TIR', kapasite:22, lat:39.93, lng:32.86, hiz:85, durum:'seferde', puan:4.9, mesafe:8.1},
+  {id:'ARV003', plaka:'35 MRD 337', sofor:'Murat Demir', arac:'Ford Cargo 1842', tip:'Kamyon', kapasite:18, lat:38.49, lng:27.05, hiz:0, durum:'musait', puan:4.7, mesafe:12.4},
+  {id:'ARV004', plaka:'16 SRK 882', sofor:'Serkan Yıldız', arac:'Mercedes Actros', tip:'TIR', kapasite:24, lat:40.18, lng:29.06, hiz:72, durum:'seferde', puan:4.8, mesafe:45.2},
+  {id:'ARV005', plaka:'01 HSN 229', sofor:'Hasan Çelik', arac:'DAF XF 480', tip:'TIR', kapasite:24, lat:37.05, lng:35.35, hiz:0, durum:'musait', puan:4.6, mesafe:18.7},
+  {id:'ARV006', plaka:'42 KML 553', sofor:'Kemal Arslan', arac:'Kamyon 18t', tip:'Kamyon', kapasite:18, lat:39.75, lng:30.52, hiz:0, durum:'musait', puan:4.5, mesafe:31.0}
+];
+
+// Arvento API fonksiyonları (API gelince implement edilecek)
+var ArventoAPI = {
+  // Tüm araçları getir
+  getVehicles: async function() {
+    if (ARVENTO_CONFIG.enabled && ARVENTO_CONFIG.apiKey) {
+      try {
+        var resp = await fetch(ARVENTO_CONFIG.apiUrl + '/vehicles', {
+          headers: {
+            'Authorization': 'Bearer ' + ARVENTO_CONFIG.apiKey,
+            'Content-Type': 'application/json'
+          }
+        });
+        var data = await resp.json();
+        return data.vehicles || data;
+      } catch(e) {
+        console.log('Arvento API hatası, mock data kullanılıyor:', e);
+        return MOCK_VEHICLES;
+      }
+    }
+    return MOCK_VEHICLES; // API yoksa mock data
+  },
+
+  // Belirli aracın konumunu getir
+  getVehicleLocation: async function(vehicleId) {
+    if (ARVENTO_CONFIG.enabled && ARVENTO_CONFIG.apiKey) {
+      try {
+        var resp = await fetch(ARVENTO_CONFIG.apiUrl + '/vehicles/' + vehicleId + '/location', {
+          headers: {'Authorization': 'Bearer ' + ARVENTO_CONFIG.apiKey}
+        });
+        return await resp.json();
+      } catch(e) {
+        return MOCK_VEHICLES.find(v => v.id === vehicleId);
+      }
+    }
+    return MOCK_VEHICLES.find(function(v){return v.id===vehicleId;});
+  }
+};
+
+// Araç markerlarını haritada göster
+var vehicleMarkers = [];
+function loadVehiclesOnMap(mapObj) {
+  ArventoAPI.getVehicles().then(function(vehicles) {
+    // Eski markerları temizle
+    vehicleMarkers.forEach(function(m){m.setMap(null);});
+    vehicleMarkers = [];
+
+    vehicles.forEach(function(v) {
+      var isMusait = v.durum === 'musait';
+      var color = isMusait ? '#2d9e6b' : '#f47920';
+      var icon = {
+        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+          '<svg width="44" height="44" viewBox="0 0 44 44" xmlns="http://www.w3.org/2000/svg">' +
+          '<circle cx="22" cy="22" r="20" fill="' + color + '" stroke="white" stroke-width="2.5"/>' +
+          '<text x="22" y="28" text-anchor="middle" font-size="18">🚛</text>' +
+          '</svg>'
+        ),
+        scaledSize: new google.maps.Size(44, 44),
+        anchor: new google.maps.Point(22, 22)
+      };
+
+      var marker = new google.maps.Marker({
+        position: {lat: v.lat, lng: v.lng},
+        map: mapObj,
+        icon: icon,
+        title: v.plaka
+      });
+
+      marker.addListener('click', function() {
+        showVehicleDetail(v);
+      });
+
+      vehicleMarkers.push(marker);
+    });
+  });
+}
+
+// Araç detay popup
+function showVehicleDetail(v) {
+  var isMusait = v.durum === 'musait';
+  var popup = document.getElementById('vehicle-popup');
+  if (!popup) {
+    popup = document.createElement('div');
+    popup.id = 'vehicle-popup';
+    popup.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);width:340px;background:#fff;border-radius:16px;padding:16px;box-shadow:0 8px 30px rgba(26,58,107,.2);z-index:1000;border-top:3px solid ' + (isMusait ? 'var(--green)' : 'var(--or)');
+    document.body.appendChild(popup);
+  }
+  popup.style.borderTopColor = isMusait ? '#2d9e6b' : '#f47920';
+  popup.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">' +
+      '<div>' +
+        '<div style="font-family:var(--fd);font-size:16px;font-weight:700;color:var(--navy)">' + v.plaka + '</div>' +
+        '<div style="font-size:12px;color:var(--txt3);margin-top:2px">' + v.arac + '</div>' +
+      '</div>' +
+      '<div style="display:flex;align-items:center;gap:6px">' +
+        '<span style="background:' + (isMusait ? 'rgba(45,158,107,.1)' : 'rgba(244,121,32,.1)') + ';color:' + (isMusait ? '#2d9e6b' : '#f47920') + ';font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;border:1px solid ' + (isMusait ? 'rgba(45,158,107,.2)' : 'rgba(244,121,32,.2)') + '">' + (isMusait ? '✓ Müsait' : '🚛 Seferde') + '</span>' +
+        '<button onclick="document.getElementById('vehicle-popup').remove()" style="background:var(--gray);border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:16px;color:var(--txt3)">×</button>' +
+      '</div>' +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">' +
+      '<div style="background:var(--gray);border-radius:8px;padding:8px">' +
+        '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px">Sürücü</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--navy);margin-top:2px">' + v.sofor + '</div>' +
+      '</div>' +
+      '<div style="background:var(--gray);border-radius:8px;padding:8px">' +
+        '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px">Kapasite</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--navy);margin-top:2px">' + v.kapasite + ' ton</div>' +
+      '</div>' +
+      '<div style="background:var(--gray);border-radius:8px;padding:8px">' +
+        '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px">Hız</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--navy);margin-top:2px">' + v.hiz + ' km/s</div>' +
+      '</div>' +
+      '<div style="background:var(--gray);border-radius:8px;padding:8px">' +
+        '<div style="font-size:10px;color:var(--txt3);text-transform:uppercase;letter-spacing:.5px">Puan</div>' +
+        '<div style="font-size:13px;font-weight:600;color:var(--or);margin-top:2px">' + v.puan + ' ★</div>' +
+      '</div>' +
+    '</div>' +
+    (isMusait ?
+      '<button onclick="alert(''+v.sofor+' ile iletişime geçildi!')" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--fd)">Bu Aracı Kirala</button>' :
+      '<button style="width:100%;background:var(--gray);color:var(--txt3);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:not-allowed;font-family:var(--fd)">Şu An Seferde</button>'
+    );
+  popup.style.display = 'block';
+}
+
+
+// Araç Bul ekranını Arvento'dan doldur
+function loadAracListesi() {
+  var container = document.getElementById('arac-listesi');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:30px 0;color:var(--txt3)"><i class="ti ti-loader" style="font-size:28px;animation:spin 1s linear infinite"></i><div style="margin-top:8px;font-size:13px">Araçlar yükleniyor...</div></div>';
+
+  ArventoAPI.getVehicles().then(function(vehicles) {
+    var musait = vehicles.filter(function(v){return v.durum==='musait';});
+    var seferde = vehicles.filter(function(v){return v.durum==='seferde';});
+    var sorted = musait.concat(seferde);
+
+    container.innerHTML = sorted.map(function(v) {
+      var isMusait = v.durum === 'musait';
+      return '<div class="araç-card" onclick="showVehicleDetail(' + JSON.stringify(v).replace(/"/g,"'") + ')">' +
+        '<div class="araç-av">' + (v.tip==='TIR'?'🚛':'🚚') + '</div>' +
+        '<div style="flex:1">' +
+          '<div class="araç-nm">' + v.sofor + ' · ' + v.arac + '</div>' +
+          '<div class="araç-sub">' + v.plaka + ' · ' + v.kapasite + ' ton · ' + v.mesafe + ' km uzakta</div>' +
+          '<div style="display:flex;gap:5px;margin-top:5px">' +
+            '<span style="font-size:11px;font-weight:700;padding:3px 8px;border-radius:5px;' +
+            (isMusait ? 'color:#2d9e6b;background:rgba(45,158,107,.08);border:1px solid rgba(45,158,107,.2)' : 'color:#f47920;background:rgba(244,121,32,.08);border:1px solid rgba(244,121,32,.2)') +
+            '">' + (isMusait ? 'Müsait' : 'Seferde') + '</span>' +
+            '<span class="jchip">' + v.puan + '★</span>' +
+            '<span class="jchip">' + v.tip + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<i class="ti ti-chevron-right" style="color:var(--txt3)"></i>' +
+      '</div>';
+    }).join('') + '<div style="height:14px"></div>';
+  });
+}
+
+// Araç Bul ekranı açılınca otomatik yükle
+var origNkNav = nkNav;
+
 </script>
 </body>
 </html>
