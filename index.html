@@ -340,6 +340,7 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
     <div class="lg-sub">Hesabınıza giriş yapın</div>
   </div>
   <div class="lg-body">
+    <div class="fg"><div class="fl">Ad Soyad</div><div class="fiw"><input class="fi" type="text" id="lg-name" placeholder="Adınız Soyadınız"/><i class="ti ti-user fi-ico"></i></div></div>
     <div class="fg"><div class="fl">Telefon / E-posta</div><div class="fiw"><input class="fi" type="text" placeholder="+90 5__ ___ __ __"/><i class="ti ti-phone fi-ico"></i></div></div>
     <div class="fg"><div class="fl">Şifre</div><div class="fiw"><input class="fi" type="password" placeholder="••••••••" id="pi"/><i class="ti ti-eye fi-ico" onclick="togglePass()"></i></div></div>
     <div class="ff">Şifremi Unuttum</div>
@@ -365,7 +366,10 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
       <div style="text-align:center"><div class="sf-sv">243</div><div class="sf-sl">Sefer</div></div>
     </div>
   </div>
-  <div class="js closed" id="js"><div class="js-pull"></div><div id="js-c"></div></div>
+    <div class="map-pill" id="loc-status-pill" style="display:none">
+      <i class="ti ti-users" style="font-size:14px;color:var(--navy)"></i>
+      <span id="online-users-badge" style="font-size:11px;font-weight:700;color:var(--navy)">0 çevrimiçi</span>
+    </div>
   <div class="BN">
     <a class="on" id="bn-h" onclick="sfNav('h')"><i class="ti ti-map"></i>Harita</a>
     <a id="bn-i" onclick="sfNav('i')"><i class="ti ti-briefcase"></i>İşler</a>
@@ -598,7 +602,206 @@ function sel(t){
   document.getElementById('lg-badge').innerHTML=lb[t];
   go('lg');
 }
-function doLogin(){if(uType==='nakliyeci')go('nk');else go('sf');}
+// ══ KONUM TAKİP SİSTEMİ ══
+var currentUserName = '';
+var currentUserType = '';
+var locationWatchId = null;
+var userLocations = {}; // {userId: {name, type, lat, lng, ts, marker}}
+var userLocationMarkers = {}; // harita markerları
+
+function doLogin(){
+  // Kullanıcı adını al
+  var nameInput = document.getElementById('lg-name') || document.querySelector('.fi[placeholder="Ad Soyad"]') || document.querySelector('.fi');
+  currentUserName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : ('Kullanıcı-' + Math.floor(Math.random()*9000+1000));
+  currentUserType = uType;
+
+  // Konum izni iste
+  requestLocationPermission(function(){
+    if(uType==='nakliyeci') go('nk'); else go('sf');
+  });
+}
+
+function requestLocationPermission(callback){
+  // İzin modal göster
+  var overlay = document.createElement('div');
+  overlay.id = 'loc-overlay';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(15,31,61,.6);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:flex-end;justify-content:center';
+
+  overlay.innerHTML =
+    '<div style="width:100%;max-width:390px;background:#fff;border-radius:24px 24px 0 0;padding:28px 24px 36px;box-shadow:0 -8px 40px rgba(26,58,107,.2)">' +
+      '<div style="width:40px;height:4px;background:#dde3ed;border-radius:2px;margin:0 auto 22px"></div>' +
+      '<div style="text-align:center;margin-bottom:20px">' +
+        '<div style="width:64px;height:64px;background:rgba(244,121,32,.1);border-radius:18px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px">' +
+          '<i class="ti ti-map-pin" style="font-size:30px;color:#f47920"></i>' +
+        '</div>' +
+        '<div style="font-family:Space Grotesk,sans-serif;font-size:20px;font-weight:700;color:#1a3a6b;margin-bottom:8px">Konum Erişimi</div>' +
+        '<div style="font-size:13px;color:#4a5d7e;line-height:1.6;max-width:280px;margin:0 auto">' +
+          'HEYU, sizi ve diğer kullanıcıları harita üzerinde gösterebilmek için konumunuza erişmek istiyor.' +
+        '</div>' +
+      '</div>' +
+      '<div style="background:#f0f4fa;border-radius:12px;padding:12px 14px;margin-bottom:20px;display:flex;gap:10px;align-items:flex-start">' +
+        '<i class="ti ti-shield-check" style="color:#2d9e6b;font-size:18px;flex-shrink:0;margin-top:1px"></i>' +
+        '<div style="font-size:12px;color:#4a5d7e;line-height:1.5">Konumunuz yalnızca aktif oturum süresince takip edilir. Uygulama kapatıldığında paylaşım durur.</div>' +
+      '</div>' +
+      '<button id="loc-allow" style="width:100%;background:#1a3a6b;color:#fff;border:none;border-radius:14px;padding:16px;font-size:16px;font-weight:700;font-family:Space Grotesk,sans-serif;cursor:pointer;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px">' +
+        '<i class="ti ti-map-pin"></i> Konumu Paylaş' +
+      '</button>' +
+      '<button id="loc-deny" style="width:100%;background:transparent;border:1.5px solid #dde3ed;border-radius:14px;padding:14px;font-size:14px;font-weight:500;color:#4a5d7e;cursor:pointer;font-family:Inter,sans-serif">' +
+        'Şimdi Değil' +
+      '</button>' +
+    '</div>';
+
+  document.body.appendChild(overlay);
+
+  document.getElementById('loc-allow').onclick = function(){
+    overlay.remove();
+    startLocationTracking();
+    callback();
+  };
+  document.getElementById('loc-deny').onclick = function(){
+    overlay.remove();
+    callback();
+  };
+}
+
+function startLocationTracking(){
+  if(!navigator.geolocation){ return; }
+
+  // Anlık konum al
+  navigator.geolocation.getCurrentPosition(function(pos){
+    updateMyLocation(pos.coords.latitude, pos.coords.longitude);
+  }, function(err){ console.log('Konum hatası:', err.message); }, {enableHighAccuracy:true, timeout:10000});
+
+  // Sürekli takip
+  if(locationWatchId) navigator.geolocation.clearWatch(locationWatchId);
+  locationWatchId = navigator.geolocation.watchPosition(function(pos){
+    updateMyLocation(pos.coords.latitude, pos.coords.longitude);
+  }, function(err){ console.log('Watch hatası:', err.message); }, {enableHighAccuracy:true, maximumAge:15000, timeout:20000});
+}
+
+function updateMyLocation(lat, lng){
+  var userId = 'user_' + currentUserName.replace(/\s/g,'_');
+  var entry = {
+    id: userId,
+    name: currentUserName,
+    type: currentUserType,
+    lat: lat,
+    lng: lng,
+    ts: Date.now()
+  };
+
+  // localStorage'a kaydet (diğer sekme/kullanıcı simülasyonu için)
+  try {
+    var all = JSON.parse(localStorage.getItem('heyu_locations') || '{}');
+    all[userId] = entry;
+    // 2 saatten eski konumları temizle
+    Object.keys(all).forEach(function(k){
+      if(Date.now() - all[k].ts > 7200000) delete all[k];
+    });
+    localStorage.setItem('heyu_locations', JSON.stringify(all));
+  } catch(e){}
+
+  userLocations[userId] = entry;
+
+  // Haritalar açıksa markerları güncelle
+  if(map) renderUserMarkersOnMap(map);
+  if(nakMap) renderUserMarkersOnMap(nakMap);
+}
+
+function getAllUserLocations(){
+  try {
+    return JSON.parse(localStorage.getItem('heyu_locations') || '{}');
+  } catch(e){ return {}; }
+}
+
+function renderUserMarkersOnMap(mapObj){
+  var locations = getAllUserLocations();
+
+  // Eski user markerlarını temizle
+  if(!mapObj._userMarkers) mapObj._userMarkers = {};
+  Object.values(mapObj._userMarkers).forEach(function(m){ m.setMap(null); });
+  mapObj._userMarkers = {};
+
+  Object.values(locations).forEach(function(u){
+    // 1 saatten eski konumları gösterme
+    if(Date.now() - u.ts > 3600000) return;
+
+    var isSelf = ('user_' + currentUserName.replace(/\s/g,'_')) === u.id;
+    var typeColors = {sofor:'#1a3a6b', nakliyeci:'#2d9e6b', admin:'#8b5cf6'};
+    var typeIcons  = {sofor:'🚛', nakliyeci:'🏗️', admin:'⚙️'};
+    var color = isSelf ? '#f47920' : (typeColors[u.type] || '#1a3a6b');
+    var icon  = typeIcons[u.type] || '👤';
+    var initials = u.name.split(' ').map(function(w){return w[0]||'';}).join('').slice(0,2).toUpperCase();
+    var label = isSelf ? 'Ben' : u.name.split(' ')[0];
+
+    var svgIcon = {
+      url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+        '<svg width="56" height="68" viewBox="0 0 56 68" xmlns="http://www.w3.org/2000/svg">' +
+        '<filter id="sh"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="rgba(0,0,0,0.25)"/></filter>' +
+        '<g filter="url(#sh)">' +
+        '<circle cx="28" cy="26" r="24" fill="' + color + '" stroke="white" stroke-width="3"/>' +
+        '<text x="28" y="34" text-anchor="middle" font-size="20">' + icon + '</text>' +
+        (isSelf ? '<circle cx="44" cy="10" r="7" fill="#f47920" stroke="white" stroke-width="2"/>' +
+          '<text x="44" y="15" text-anchor="middle" font-size="9" font-weight="700" fill="white">BEN</text>' : '') +
+        '</g>' +
+        '<rect x="4" y="52" width="48" height="14" rx="7" fill="' + color + '" opacity=".9"/>' +
+        '<text x="28" y="63" text-anchor="middle" font-size="9" font-weight="700" fill="white" font-family="Inter,sans-serif">' + label + '</text>' +
+        '</svg>'
+      ),
+      scaledSize: new google.maps.Size(56, 68),
+      anchor: new google.maps.Point(28, 50)
+    };
+
+    var marker = new google.maps.Marker({
+      position: {lat: u.lat, lng: u.lng},
+      map: mapObj,
+      icon: svgIcon,
+      title: u.name + ' (' + (u.type==='sofor'?'Şoför':u.type==='nakliyeci'?'Nakliyeci':'Yönetici') + ')',
+      zIndex: isSelf ? 999 : 100
+    });
+
+    // Tıklama ile bilgi penceresi
+    (function(userData, mkr){
+      var typeLabel = {sofor:'Şoför', nakliyeci:'Nakliyeci', admin:'Yönetici'}[userData.type] || userData.type;
+      var minAgo = Math.floor((Date.now() - userData.ts) / 60000);
+      var timeStr = minAgo < 1 ? 'Az önce' : minAgo + ' dk önce';
+      var iw = new google.maps.InfoWindow({
+        content: '<div style="font-family:Inter,sans-serif;padding:4px 2px;min-width:160px">' +
+          '<div style="font-weight:700;color:#1a3a6b;font-size:14px;margin-bottom:3px">' + userData.name + '</div>' +
+          '<div style="font-size:11px;color:#4a5d7e;margin-bottom:2px">' + typeLabel + '</div>' +
+          '<div style="font-size:10px;color:#8a9bbf">' + timeStr + ' güncellendi</div>' +
+          '</div>'
+      });
+      mkr.addListener('click', function(){ iw.open(mapObj, mkr); });
+    })(u, marker);
+
+    mapObj._userMarkers[u.id] = marker;
+  });
+  // Badge göster
+  var pill = document.getElementById('loc-status-pill');
+  if(pill){
+    var activeCount = Object.values(locations).filter(function(u){ return Date.now()-u.ts < 3600000; }).length;
+    pill.style.display = activeCount > 0 ? 'flex' : 'none';
+    var badge = document.getElementById('online-users-badge');
+    if(badge) badge.textContent = activeCount + ' çevrimiçi';
+  }
+}
+
+// Kullanıcı sayısını gösteren badge
+function updateUserCountBadge(){
+  var locations = getAllUserLocations();
+  var active = Object.values(locations).filter(function(u){ return Date.now()-u.ts < 3600000; });
+  var badge = document.getElementById('online-users-badge');
+  if(badge) badge.textContent = active.length + ' çevrimiçi';
+}
+
+// Her 20 saniyede diğer kullanıcıları haritaya yansıt
+setInterval(function(){
+  if(map) renderUserMarkersOnMap(map);
+  if(nakMap) renderUserMarkersOnMap(nakMap);
+  updateUserCountBadge();
+}, 20000);
+
 function togglePass(){var i=document.getElementById('pi');i.type=i.type==='password'?'text':'password';}
 function toggleOnline(){isOnline=!isOnline;var p=document.getElementById('opill'),t=document.getElementById('otxt');p.className='online-pill '+(isOnline?'on':'off');t.textContent=isOnline?'Çevrimiçi':'Çevrimdışı';}
 
@@ -657,6 +860,8 @@ function initMap(){
   map.setCenter({lat:39.2,lng:34.0});
   // Arvento araçlarını yükle
   setTimeout(function(){loadVehiclesOnMap(map);startVehicleRefresh(map);},500);
+  // Kullanıcı konumlarını göster
+  setTimeout(function(){renderUserMarkersOnMap(map);},800);
 }
 function initNakMap(){
   var el=document.getElementById('nak-map');
@@ -689,6 +894,8 @@ function initNakMap(){
   nakMap.setCenter({lat:39.5,lng:34.0});
   // Arvento araçlarını yükle
   setTimeout(function(){loadVehiclesOnMap(nakMap);},500);
+  // Kullanıcı konumlarını göster
+  setTimeout(function(){renderUserMarkersOnMap(nakMap);},800);
 }
 
 function openJob(i){
