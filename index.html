@@ -1352,7 +1352,7 @@ function showVehicleDetail(v) {
       '</div>' +
     '</div>' +
     (isMusait ?
-      '<button onclick="alert(v.sofor+\' ile iletişime geçildi!\')" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--fd)">Bu Aracı Kirala</button>' :
+      '<button onclick="alert(\''+v.sofor+' ile iletişime geçildi!\')" style="width:100%;background:var(--navy);color:#fff;border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:700;cursor:pointer;font-family:var(--fd)">Bu Aracı Kirala</button>' :
       '<button style="width:100%;background:var(--gray);color:var(--txt3);border:none;border-radius:10px;padding:12px;font-size:14px;font-weight:600;cursor:not-allowed;font-family:var(--fd)">Şu An Seferde</button>'
     );
   popup.style.display = 'block';
