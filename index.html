@@ -386,25 +386,8 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
     <div class="page-hdr-row"><button class="back" style="position:relative;top:0;left:0;flex-shrink:0" onclick="sfNav('h')"><i class="ti ti-arrow-left"></i></button><div class="page-title">İş Teklifleri</div></div>
     <div class="frow"><div class="fp on">Tümü (3)</div><div class="fp">⚡ Acil</div><div class="fp">TIR</div><div class="fp">Kamyon</div></div>
   </div>
-  <div class="scroll">
-    <div class="jc pri">
-      <div class="jc-top"><div class="jc-bgs"><span class="jb jb-red">⚡ Acil</span><span class="jb jb-navy">TIR</span><span class="jb jb-gray">3 dk önce</span></div><div class="jc-price">₺8.400</div></div>
-      <div style="margin-bottom:10px"><div class="jrp"><div class="jdg"></div><div>Gaziantep OSB, Çelik Yapı Fab.<div class="jmid">Yükleme — Hazır beton kalıp</div></div></div><div class="jrp"><div class="jrl"><div class="jrli"></div></div><div class="jmid">318 km · ~4s 10dk · TEM</div></div><div class="jrp"><div class="jdr"></div><div>Adana, Seyhan Konut Şantiyesi<div class="jmid">Teslim — Vinç bekleniyor</div></div></div></div>
-      <div class="jc-chips"><span class="jchip">22 ton</span><span class="jchip">Hazır Beton</span><span class="jchip">Bugün 14:00</span></div>
-      <div class="jc-acts"><button class="jbtn" onclick="alert('Kabul edildi! ₺8.400')"><i class="ti ti-check"></i> Kabul Et</button><button class="jbtn-no"><i class="ti ti-x"></i></button></div>
-    </div>
-    <div class="jc">
-      <div class="jc-top"><div class="jc-bgs"><span class="jb jb-navy">Kamyon</span><span class="jb jb-gray">12 dk önce</span></div><div class="jc-price">₺3.200</div></div>
-      <div style="margin-bottom:10px"><div class="jrp"><div class="jdg"></div><div>İstanbul, Başakşehir Agrega Deposu<div class="jmid">Yükleme — Kırma taş</div></div></div><div class="jrp"><div class="jrl"><div class="jrli"></div></div><div class="jmid">47 km · ~55 dk · E-80</div></div><div class="jrp"><div class="jdr"></div><div>Esenyurt, Mega Rezidans Şantiyesi</div></div></div>
-      <div class="jc-chips"><span class="jchip">14 ton</span><span class="jchip">Agrega</span><span class="jchip">Yarın 08:00</span></div>
-      <div class="jc-acts"><button class="jbtn" onclick="alert('Kabul edildi! ₺3.200')"><i class="ti ti-check"></i> Kabul Et</button><button class="jbtn-no"><i class="ti ti-x"></i></button></div>
-    </div>
-    <div class="jc">
-      <div class="jc-top"><div class="jc-bgs"><span class="jb jb-navy">TIR</span><span class="jb jb-green">Ön Ödemeli</span><span class="jb jb-gray">28 dk önce</span></div><div class="jc-price">₺12.750</div></div>
-      <div style="margin-bottom:10px"><div class="jrp"><div class="jdg"></div><div>Ankara, Ostim Çelik Profil A.Ş.<div class="jmid">Yükleme — Çelik I-kiriş</div></div></div><div class="jrp"><div class="jrl"><div class="jrli"></div></div><div class="jmid">470 km · ~5s 20dk · O-4/TEM</div></div><div class="jrp"><div class="jdr"></div><div>İzmir, Çiğli Endüstri Bölgesi</div></div></div>
-      <div class="jc-chips"><span class="jchip">24 ton</span><span class="jchip">Çelik Profil</span><span class="jchip">3 gün sonra</span></div>
-      <div class="jc-acts"><button class="jbtn" onclick="alert('Kabul edildi! ₺12.750')"><i class="ti ti-check"></i> Kabul Et</button><button class="jbtn-no"><i class="ti ti-x"></i></button></div>
-    </div>
+  <div class="scroll" id="sf-jobs-list">
+    <div style="text-align:center;padding:30px;color:var(--txt3);font-size:13px"><i class="ti ti-loader" style="animation:spin 1s linear infinite;font-size:24px"></i><div style="margin-top:8px">İlanlar yükleniyor...</div></div>
     <div style="height:14px"></div>
   </div>
   <div class="BN"><a onclick="sfNav('h')"><i class="ti ti-map"></i>Harita</a><a class="on"><i class="ti ti-briefcase"></i>İşler</a><a onclick="sfNav('s')"><i class="ti ti-truck"></i>Seferim</a><a onclick="sfNav('k')"><i class="ti ti-wallet"></i>Kazanç</a><a onclick="go('ut')"><i class="ti ti-user"></i>Profil</a></div>
@@ -509,16 +492,16 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
   <div class="scroll">
     <div class="form-card">
       <div class="form-card-title"><i class="ti ti-map-pin" style="color:var(--or)"></i>Güzergah</div>
-      <div class="frow2 full"><div class="ff2"><div class="fl2">Yükleme Noktası</div><input class="fi2" type="text" placeholder="Şehir, İlçe..."/></div></div>
-      <div class="frow2 full"><div class="ff2"><div class="fl2">Teslim Noktası</div><input class="fi2" type="text" placeholder="Şehir, İlçe..."/></div></div>
-      <div class="frow2"><div class="ff2"><div class="fl2">Tarih</div><input class="fi2" type="date"/></div><div class="ff2"><div class="fl2">Saat</div><input class="fi2" type="time"/></div></div>
+      <div class="frow2 full"><div class="ff2"><div class="fl2">Yükleme Noktası</div><input id="job-from" class="fi2" type="text" placeholder="Şehir, İlçe..."/></div></div>
+      <div class="frow2 full"><div class="ff2"><div class="fl2">Teslim Noktası</div><input id="job-to" class="fi2" type="text" placeholder="Şehir, İlçe..."/></div></div>
+      <div class="frow2"><div class="ff2"><div class="fl2">Tarih</div><input id="job-date" class="fi2" type="date"/></div><div class="ff2"><div class="fl2">Saat</div><input id="job-time" class="fi2" type="time"/></div></div>
     </div>
     <div class="form-card">
       <div class="form-card-title"><i class="ti ti-package" style="color:var(--or)"></i>Yük</div>
-      <div class="frow2"><div class="ff2"><div class="fl2">Yük Türü</div><select class="sel2"><option>Hazır Beton</option><option>Agrega</option><option>Çelik Profil</option><option>Tuğla</option><option>Demir Donatı</option><option>Diğer</option></select></div><div class="ff2"><div class="fl2">Ağırlık (ton)</div><input class="fi2" type="number" placeholder="0"/></div></div>
-      <div class="frow2"><div class="ff2"><div class="fl2">Araç Tipi</div><select class="sel2"><option>TIR</option><option>Kamyon</option><option>Fark Etmez</option></select></div><div class="ff2"><div class="fl2">Ücret (₺)</div><input class="fi2" type="number" placeholder="0"/></div></div>
+      <div class="frow2"><div class="ff2"><div class="fl2">Yük Türü</div><select id="job-type" class="sel2"><option>Hazır Beton</option><option>Agrega</option><option>Çelik Profil</option><option>Tuğla</option><option>Demir Donatı</option><option>Diğer</option></select></div><div class="ff2"><div class="fl2">Ağırlık (ton)</div><input id="job-weight" class="fi2" type="number" placeholder="0"/></div></div>
+      <div class="frow2"><div class="ff2"><div class="fl2">Araç Tipi</div><select id="job-vehicle" class="sel2"><option>TIR</option><option>Kamyon</option><option>Fark Etmez</option></select></div><div class="ff2"><div class="fl2">Ücret (₺)</div><input id="job-price" class="fi2" type="number" placeholder="0"/></div></div>
     </div>
-    <button class="sub-btn" onclick="alert('İlan yayınlandı! Sürücülere bildirim gönderildi.')"><i class="ti ti-send"></i> İlanı Yayınla</button>
+    <button class="sub-btn" id="job-submit-btn" onclick="submitJob()"><i class="ti ti-send"></i> İlanı Yayınla</button>
     <div style="height:14px"></div>
   </div>
 </div>
@@ -609,7 +592,135 @@ function sel(t){
   document.getElementById('lg-badge').innerHTML=lb[t];
   go('lg');
 }
-// ══ KONUM TAKİP SİSTEMİ ══
+// ══ İŞ İLANI FONKSİYONLARI ══
+
+function submitJob(){
+  var from    = document.getElementById('job-from').value.trim();
+  var to      = document.getElementById('job-to').value.trim();
+  var date    = document.getElementById('job-date').value;
+  var time    = document.getElementById('job-time').value;
+  var type    = document.getElementById('job-type').value;
+  var weight  = document.getElementById('job-weight').value;
+  var vehicle = document.getElementById('job-vehicle').value;
+  var price   = document.getElementById('job-price').value;
+
+  if(!from || !to){ alert('Yükleme ve teslim noktasını girin.'); return; }
+
+  var btn = document.getElementById('job-submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="ti ti-loader"></i> Yayınlanıyor...';
+
+  var title = type + ' · ' + from + ' → ' + to;
+  var desc  = vehicle + ' · ' + (weight||'?') + ' ton' + (date ? ' · ' + date + (time?' '+time:'') : '');
+
+  sb.from('jobs').insert({
+    nakliyeci_id: currentUserId,
+    title: title,
+    description: desc,
+    from_city: from,
+    to_city: to,
+    price: price ? parseFloat(price) : null,
+    status: 'open'
+  }).select('id').single().then(function(res){
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-send"></i> İlanı Yayınla';
+    if(res.error){
+      alert('Hata: ' + res.error.message);
+      return;
+    }
+    // Formu temizle
+    ['job-from','job-to','job-date','job-time','job-weight','job-price'].forEach(function(id){
+      document.getElementById(id).value = '';
+    });
+    // Başarı bildirimi
+    showToast('İlan yayınlandı! Sürücülere bildirim gönderildi.', 'success');
+    go('nk');
+    // Şoför ilanlarını güncelle
+    loadJobsFromDB();
+  });
+}
+
+// Şoför ekranı için ilanları DB'den çek
+function loadJobsFromDB(){
+  sb.from('jobs')
+    .select('*, users!nakliyeci_id(name, rating)')
+    .eq('status', 'open')
+    .order('created_at', { ascending: false })
+    .limit(20)
+    .then(function(res){
+      if(res.error || !res.data) return;
+      renderJobCards(res.data);
+    });
+}
+
+function renderJobCards(jobs){
+  var container = document.getElementById('sf-jobs-list');
+  if(!container) return;
+  if(jobs.length === 0){
+    container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--txt3);font-size:13px">Henüz aktif ilan yok.</div>';
+    return;
+  }
+  container.innerHTML = jobs.map(function(j){
+    var rating = (j.users && j.users.rating) ? j.users.rating.toFixed(1) : '5.0';
+    var nakliyeci = (j.users && j.users.name) ? j.users.name : 'Nakliyeci';
+    var price = j.price ? '₺' + Number(j.price).toLocaleString('tr-TR') : 'Fiyat Belirtilmemiş';
+    return '<div class="jc" onclick="openJobDetail(\''+j.id+'\')">' +
+      '<div class="jrp"><div class="jdg"></div><div>'+nakliyeci+'<div class="jmid">'+j.title+'</div></div></div>' +
+      '<div class="jrp"><div class="jrl"><div class="jrli"></div></div><div class="jmid">'+(j.description||'')+'</div></div>' +
+      '<div class="jrp"><div class="jdr"></div><div>'+j.to_city+'</div></div>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">' +
+        '<div style="display:flex;gap:5px"><span class="jchip">'+rating+'★</span><span class="jchip">Açık</span></div>' +
+        '<div style="font-weight:700;color:var(--green);font-size:14px">'+price+'</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+var selectedJobId = null;
+function openJobDetail(jobId){
+  selectedJobId = jobId;
+  go('sf-job-detail');
+  loadJobDetail(jobId);
+}
+
+function loadJobDetail(jobId){
+  sb.from('jobs')
+    .select('*, users!nakliyeci_id(name, rating, trip_count)')
+    .eq('id', jobId).single()
+    .then(function(res){
+      if(res.error || !res.data) return;
+      var j = res.data;
+      var el = document.getElementById('job-detail-content');
+      if(!el) return;
+      var price = j.price ? '₺' + Number(j.price).toLocaleString('tr-TR') : '—';
+      var rating = (j.users && j.users.rating) ? j.users.rating.toFixed(1) : '5.0';
+      var trips = (j.users && j.users.trip_count) ? j.users.trip_count : 0;
+      el.innerHTML =
+        '<div class="det-card" style="margin-bottom:12px">' +
+          '<div style="font-size:16px;font-weight:700;color:var(--navy);margin-bottom:6px">'+j.title+'</div>' +
+          '<div style="font-size:13px;color:var(--txt2)">'+(j.description||'')+'</div>' +
+        '</div>' +
+        '<div class="det-card"><div class="det-grid">' +
+          '<div><div class="di-l">Yükleme</div><div class="di-v">'+(j.from_city||'—')+'</div></div>' +
+          '<div><div class="di-l">Teslim</div><div class="di-v">'+(j.to_city||'—')+'</div></div>' +
+          '<div><div class="di-l">Ücret</div><div class="di-v gn">'+price+'</div></div>' +
+          '<div><div class="di-l">Nakliyeci</div><div class="di-v">'+(j.users?j.users.name:'—')+'</div></div>' +
+          '<div><div class="di-l">Puan</div><div class="di-v">'+rating+'★</div></div>' +
+          '<div><div class="di-l">Sefer</div><div class="di-v">'+trips+'</div></div>' +
+        '</div></div>' +
+        '<button class="sub-btn" style="margin-top:12px" onclick="showOfferModal(\''+j.id+'\')"><i class="ti ti-send"></i> Teklif Ver</button>';
+    });
+}
+
+function showToast(msg, type){
+  var t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:100px;left:50%;transform:translateX(-50%);background:'+(type==='success'?'#2d9e6b':'#e24b4a')+';color:#fff;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:9999;box-shadow:0 4px 20px rgba(0,0,0,.2);font-family:Inter,sans-serif';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(function(){ t.remove(); }, 3000);
+}
+
+
 var currentUserName = '';
 var currentUserType = '';
 var locationWatchId = null;
@@ -991,6 +1102,8 @@ function initMap(){
   setTimeout(function(){loadVehiclesOnMap(map);startVehicleRefresh(map);},500);
   // Kullanıcı konumlarını göster + realtime sync başlat
   setTimeout(function(){renderUserMarkersOnMap(map); initLocationSync();},800);
+  // İş ilanlarını DB'den yükle
+  setTimeout(loadJobsFromDB, 600);
 }
 function initNakMap(){
   var el=document.getElementById('nak-map');
