@@ -282,6 +282,7 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
 .nk-map-top{padding:12px 14px;display:flex;gap:8px;align-items:center;flex-shrink:0;background:#fff;border-bottom:1.5px solid var(--line);box-shadow:0 1px 8px rgba(26,58,107,.06);z-index:10}
 @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 <div class="W" id="W">
@@ -572,6 +573,12 @@ html,html{height:100%}body{height:100%;font-family:var(--fn);background:#dde5f0;
 </div><!-- /W -->
 <script>
 var map=null,nakMap=null,isOnline=true,uType='sofor',stepN=1;
+
+// ══ SUPABASE BAĞLANTISI ══
+var SUPABASE_URL = 'https://wmupadynlilczqcgxxzb.supabase.co';
+var SUPABASE_KEY = 'sb_publishable_FAHNOh9ou9VG8KgjkwoY3Q_wOxP2G5n';
+var sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+var currentUserId = null; // DB'deki UUID
 var JOBS=[
   {b:'acil',bt:'⚡ Acil Sevkiyat',t:'Hazır Beton Sevkiyatı',p:'₺8.400',f:'Gaziantep OSB, Çelik Yapı Fab.',to:'Adana, Seyhan Konut Şantiyesi',d:'318 km · ~4s 10dk · TEM',ch:['22 ton','TIR','Bugün 14:00'],lat:37.05,lng:35.35},
   {b:'norm',bt:'📦 İş Teklifi',t:'Agrega Taşıma',p:'₺3.200',f:'İstanbul, Başakşehir Agrega Deposu',to:'Esenyurt, Mega Rezidans Şantiyesi',d:'47 km · ~55 dk · E-80',ch:['14 ton','Kamyon','Yarın 08:00'],lat:40.98,lng:28.71},
@@ -610,14 +617,36 @@ var userLocations = {}; // {userId: {name, type, lat, lng, ts, marker}}
 var userLocationMarkers = {}; // harita markerları
 
 function doLogin(){
-  // Kullanıcı adını al
-  var nameInput = document.getElementById('lg-name') || document.querySelector('.fi[placeholder="Ad Soyad"]') || document.querySelector('.fi');
+  var nameInput = document.getElementById('lg-name') || document.querySelector('.fi');
   currentUserName = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : ('Kullanıcı-' + Math.floor(Math.random()*9000+1000));
   currentUserType = uType;
 
-  // Konum izni iste
-  requestLocationPermission(function(){
-    if(uType==='nakliyeci') go('nk'); else go('sf');
+  // Supabase'e kullanıcı kaydet (veya güncelle)
+  sb.from('users').upsert({
+    name: currentUserName,
+    type: currentUserType,
+    phone: 'anon_' + currentUserName.replace(/\s/g,'_').toLowerCase()
+  }, { onConflict: 'phone', ignoreDuplicates: false })
+  .select('id').single()
+  .then(function(res){
+    if(res.data && res.data.id){
+      currentUserId = res.data.id;
+    } else {
+      // Kayıt yoksa yeni ekle
+      return sb.from('users').insert({
+        name: currentUserName,
+        type: currentUserType,
+        phone: 'anon_' + currentUserName.replace(/\s/g,'_').toLowerCase() + '_' + Date.now()
+      }).select('id').single().then(function(r){
+        if(r.data) currentUserId = r.data.id;
+      });
+    }
+  })
+  .catch(function(e){ console.log('Kullanıcı kaydı:', e); })
+  .finally(function(){
+    requestLocationPermission(function(){
+      if(uType==='nakliyeci') go('nk'); else go('sf');
+    });
   });
 }
 
@@ -680,30 +709,31 @@ function startLocationTracking(){
 }
 
 function updateMyLocation(lat, lng){
-  var userId = 'user_' + currentUserName.replace(/\s/g,'_');
-  var entry = {
-    id: userId,
-    name: currentUserName,
-    type: currentUserType,
-    lat: lat,
-    lng: lng,
-    ts: Date.now()
-  };
+  var userId = currentUserId || ('local_' + currentUserName.replace(/\s/g,'_'));
 
-  // localStorage'a kaydet (diğer sekme/kullanıcı simülasyonu için)
+  // Supabase'e konum yaz (upsert = yoksa ekle, varsa güncelle)
+  if(currentUserId){
+    sb.from('locations').upsert({
+      user_id: currentUserId,
+      lat: lat,
+      lng: lng,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' }).then(function(res){
+      if(res.error) console.log('Konum yazma hatası:', res.error.message);
+    });
+  }
+
+  // Yerel cache güncelle (harita için)
+  var entry = { id: userId, name: currentUserName, type: currentUserType, lat: lat, lng: lng, ts: Date.now() };
+  userLocations[userId] = entry;
+
+  // localStorage yedeği (offline fallback)
   try {
     var all = JSON.parse(localStorage.getItem('heyu_locations') || '{}');
     all[userId] = entry;
-    // 2 saatten eski konumları temizle
-    Object.keys(all).forEach(function(k){
-      if(Date.now() - all[k].ts > 7200000) delete all[k];
-    });
     localStorage.setItem('heyu_locations', JSON.stringify(all));
   } catch(e){}
 
-  userLocations[userId] = entry;
-
-  // Haritalar açıksa markerları güncelle
   if(map) renderUserMarkersOnMap(map);
   if(nakMap) renderUserMarkersOnMap(nakMap);
 }
@@ -712,6 +742,51 @@ function getAllUserLocations(){
   try {
     return JSON.parse(localStorage.getItem('heyu_locations') || '{}');
   } catch(e){ return {}; }
+}
+
+// Supabase'den tüm aktif konumları çek ve cache'e yaz
+function fetchLocationsFromDB(){
+  sb.from('locations')
+    .select('user_id, lat, lng, updated_at, users(id, name, type)')
+    .gte('updated_at', new Date(Date.now() - 3600000).toISOString())
+    .then(function(res){
+      if(res.error || !res.data) return;
+      var all = {};
+      res.data.forEach(function(row){
+        if(!row.users) return;
+        var uid = row.user_id;
+        all[uid] = {
+          id: uid,
+          name: row.users.name,
+          type: row.users.type,
+          lat: row.lat,
+          lng: row.lng,
+          ts: new Date(row.updated_at).getTime()
+        };
+      });
+      // Cache güncelle
+      try { localStorage.setItem('heyu_locations', JSON.stringify(all)); } catch(e){}
+      userLocations = all;
+      if(map) renderUserMarkersOnMap(map);
+      if(nakMap) renderUserMarkersOnMap(nakMap);
+    });
+}
+
+// Realtime: başka bir kullanıcı konumunu güncelleyince anında haritaya yansı
+function startRealtimeLocationSync(){
+  sb.channel('locations_realtime')
+    .on('postgres_changes', { event: '*', schema: 'public', table: 'locations' }, function(payload){
+      fetchLocationsFromDB();
+    })
+    .subscribe();
+}
+
+// Harita açılınca DB'den konumları yükle ve realtime başlat
+function initLocationSync(){
+  fetchLocationsFromDB();
+  startRealtimeLocationSync();
+  // Her 30 sn'de bir de yenile (realtime backup)
+  setInterval(fetchLocationsFromDB, 30000);
 }
 
 function renderUserMarkersOnMap(mapObj){
@@ -914,8 +989,8 @@ function initMap(){
   map.setCenter({lat:39.2,lng:34.0});
   // Arvento araçlarını yükle
   setTimeout(function(){loadVehiclesOnMap(map);startVehicleRefresh(map);},500);
-  // Kullanıcı konumlarını göster
-  setTimeout(function(){renderUserMarkersOnMap(map);},800);
+  // Kullanıcı konumlarını göster + realtime sync başlat
+  setTimeout(function(){renderUserMarkersOnMap(map); initLocationSync();},800);
 }
 function initNakMap(){
   var el=document.getElementById('nak-map');
